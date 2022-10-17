@@ -1,0 +1,19 @@
+/* Claro. */
+.form-managed-file__main .button {
+  margin-left: 1rem!important;
+}
+
+/* Starterkit.*/
+.image-widget-data .button {
+  float: right;
+  margin: 0!important;
+  margin-left: 1rem!important;
+}
+
+.form-item-new-filename label {
+  display: block;
+}
+
+.form-item-new-filename .form-text {
+  display: inline-block;
+}

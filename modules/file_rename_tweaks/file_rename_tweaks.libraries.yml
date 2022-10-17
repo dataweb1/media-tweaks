@@ -1,0 +1,6 @@
+file_rename_tweaks:
+  css:
+    theme:
+      css/file_rename_tweaks.css: {}
+  js:
+    js/file_rename_tweaks.js: {}

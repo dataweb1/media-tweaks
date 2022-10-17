@@ -1,0 +1,7 @@
+name: Media Tweaks
+type: module
+description: Some media tweaks and media features like 'Edit' media button in 'media library' widget.
+core_version_requirement: ^8 || ^9
+package: dw
+dependencies:
+  - drupal:media

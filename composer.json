@@ -1,0 +1,24 @@
+{
+  "name": "dataweb1/media_tweaks",
+  "description": "Some Media tweaks.",
+  "type": "drupal-module",
+  "homepage": "https://github.com/dataweb1/media_tweaks",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  ],
+  "require": {
+    "voku/urlify": "^5.0",
+    "drupal/file_rename": "^1.0@alpha"
+  },
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Bert Jansen",
+      "email": "bert@data-web.be",
+      "role": "Owner"
+    }
+  ]
+}

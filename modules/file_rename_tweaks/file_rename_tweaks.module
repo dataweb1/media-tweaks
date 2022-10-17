@@ -1,0 +1,31 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Plugin\Field\FieldWidget\FileWidget;
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function file_rename_tweaks_entity_type_build(array &$entity_types) {
+  if (\Drupal::moduleHandler()->moduleExists('file_rename')) {
+    // MediaTweaksFileRenameForm holds some little tweaks.
+    $entity_types['file']->setFormClass('rename', 'Drupal\file_rename_tweaks\Form\TweakedFileRenameForm');
+  }
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function file_rename_tweaks_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+  $widget = $context['widget'];
+  if ($widget instanceof FileWidget && isset($element['#default_value']['target_id'])) {
+    // Remove 'button--danger' class.
+    if (($key = array_search('button--danger', $element['rename_button']['#attributes']['class'])) !== false) {
+      unset($element['rename_button']['#attributes']['class'][$key]);
+    }
+    $element['rename_button']['#title'] = t('Rename filename');
+    $element['rename_button']['#attributes']['class'][] = 'button--extrasmall';
+    $element['rename_button']['#attributes']['class'][] = 'button-file-rename';
+    $element['#attached']['library'][] = 'file_rename_tweaks/file_rename_tweaks';
+  }
+}

@@ -1,0 +1,8 @@
+name: File rename Tweaks
+type: module
+description: Some tweaks to the file_rename module.
+core_version_requirement: ^8 || ^9
+package: dw
+dependencies:
+  - drupal:file_rename
+  - drupal:media_tweaks

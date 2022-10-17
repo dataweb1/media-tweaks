@@ -1,0 +1,197 @@
+<?php
+
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\MessageCommand;
+use Drupal\Core\Ajax\PrependCommand;
+use Drupal\Core\Ajax\RemoveCommand;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\file\Plugin\Field\FieldWidget\FileWidget;
+use Drupal\media_tweaks\Ajax\CloseDialogOrRefreshPageCommand;
+use voku\helper\URLify;
+
+/**
+ * Implements hook_form_alter().
+ */
+function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Add 'edit' button to Media widgets.
+  foreach ($form as $key => &$element) {
+    if (substr($key, 0, 6) == 'field_') {
+      if (isset($element['widget']['selection'])) {
+        foreach ($element['widget']['selection'] as $delta => &$item) {
+          if (is_int($delta)) {
+            $url = Url::fromRoute('entity.media.canonical', [
+              'media' => $item['target_id']['#value'],
+              'title' => 'Edit media',
+              'no_redirect' => 1,
+            ]);
+            $link = Link::fromTextAndUrl('Edit', $url)->toRenderable();
+            $link['#attributes'] = [
+              'class' => [
+                'media-library-item__edit',
+                'icon-link',
+              ]
+            ];
+            $item['edit_button'] = $link;
+
+            $item['#attached']['library'][] = 'media_tweaks/media_widget';
+          }
+        }
+      }
+    }
+  }
+
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  // For media edit form.
+  if (in_array($route_name, ['entity.media.canonical', 'entity.media.edit_form'])) {
+    // Unset revision since it is not that usefull form media.
+    unset($form['revision_information']);
+    unset($form['revision_log_message']);
+    unset($form['revision']);
+
+    $form['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#weight' => 11,
+      '#ajax' => [
+        'callback' => '_cancelEditMedia'
+      ],
+    ];
+
+    $form['#after_build'][] = '_media_entity_form_after_build';
+
+    $form['#prefix'] = '<div id="media_edit_form_wrapper">';
+    $form['#suffix'] = '</div>';
+
+    // AJAXify the media edit form.
+    $form['actions']['submit']['#ajax'] = [
+      'callback' => '_afterEditMedia'
+    ];
+
+    $form['actions']['submit']['#weight'] = 10;
+
+    $form['actions']['delete']['#weight'] = 12;
+
+    $form['#attached']['library'][] = 'media_tweaks/close_dialog_or_refresh_page_command';
+    $form['#attached']['library'][] = 'core/drupal.ajax';
+  }
+}
+
+/**
+ * Implements hook_link_alter().
+ */
+function media_tweaks_link_alter(&$variables) {
+  /** @var \Drupal\Core\Url $url */
+  $url = $variables['url'];
+
+  if (!$url->isRouted()) {
+    return;
+  }
+
+  $routeName = $url->getRouteName();
+  if (!in_array($routeName, [
+    'entity.media.canonical',
+    'entity.media.edit_form',
+    'entity.media.delete_form',
+    'entity.file.rename_form',
+  ])) {
+    return;
+  }
+
+  $dialog_options = [
+    'width' => '800',
+    'maxWith' => '50%',
+    'height' => 'auto',
+    'modal' => TRUE,
+    'dialogClass' => URLify::filter($routeName).'-dialog',
+  ];
+
+  if (isset($url->getRouteParameters()['title'])) {
+    $dialog_options['title'] = $url->getRouteParameters()['title'];
+  }
+
+  $variables['options']['attributes']['class'][] = 'use-ajax';
+  $variables['options']['attributes']['data-dialog-type'] = 'dialog';
+  $variables['options']['attributes']['data-dialog-options'] = Json::encode($dialog_options);
+
+  $variables['#attached']['library'][] = 'core/drupal.ajax';
+}
+
+/**
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $formState
+ *
+ * @return array
+ */
+function _media_entity_form_after_build(array $form, FormStateInterface &$formState) {
+  foreach (['field_media_image', 'field_media_document', 'field_media_video'] as $element) {
+    if (isset($form[$element])) {
+      $form[$element]['widget'][0]['remove_button']['#value'] = t('Replace file');
+    }
+  }
+  return $form;
+}
+
+/**
+ * AJAX callback after File Rename.
+ */
+function _afterEditMedia(array $form, FormStateInterface &$formState): AjaxResponse {
+  $response = new AjaxResponse();
+  $messages = \Drupal::messenger()->all();
+  if (!isset($messages['error'])) {
+    // For media edit form coming via media_canonical.
+    $response->addCommand(new CloseDialogOrRefreshPageCommand('.entitymediacanonical-dialog .ui-dialog-content'));
+
+    // For media edit form coming via media_edit.form.
+    $response->addCommand(new CloseDialogOrRefreshPageCommand('.entitymediaedit-form-dialog .ui-dialog-content'));
+    $response->addCommand(new MessageCommand($messages['status'][0], NULL, ['type' => 'status']));
+    \Drupal::messenger()->deleteAll();
+  }
+  else {
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
+    $renderer = \Drupal::service('renderer');
+
+    /** @var \Drupal\Core\Extension\ModuleHandler $moduleHandler */
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('inline_form_errors')) {
+      $response->addCommand(new HtmlCommand('#media_edit_form_wrapper', $form));
+    }
+
+    $messagesElement = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => 'edit-media-form-messages',
+      ],
+      'messages' => ['#type' => 'status_messages'],
+    ];
+
+    $response->addCommand(new RemoveCommand('.edit-media-form-messages'));
+
+    $response->addCommand(new PrependCommand(
+      '#media_edit_form_wrapper',
+      $renderer->renderRoot($messagesElement)
+    ));
+  }
+  return $response;
+}
+
+/**
+ * AJAX callback on cancel File Rename.
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $formState
+ *
+ * @return \Drupal\Core\Ajax\AjaxResponse
+ */
+function _cancelEditMedia(array $form, FormStateInterface &$formState): AjaxResponse {
+  $response = new AjaxResponse();
+  // For media edit form coming via media_canonical.
+  $response->addCommand(new CloseDialogCommand('.entitymediacanonical-dialog .ui-dialog-content'));
+
+  // For media edit form coming via media_edit.form.
+  $response->addCommand(new CloseDialogCommand('.entitymediaedit-form-dialog .ui-dialog-content'));
+  return $response;
+}

@@ -1,0 +1,11 @@
+close_dialog_or_refresh_page_command:
+  js:
+    js/close_dialog_or_refresh_page_command.js: {}
+
+media_entity_form:
+  js:
+    js/media_entity_form.js: {}
+
+media_widget:
+  js:
+    js/media_widget.js: {}
