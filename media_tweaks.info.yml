@@ -5,3 +5,4 @@ core_version_requirement: ^8 || ^9
 package: dw
 dependencies:
   - drupal:media
+  - drupal:responsive_image
