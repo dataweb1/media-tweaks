@@ -6,3 +6,4 @@ package: dw
 dependencies:
   - drupal:media
   - drupal:responsive_image
+  - drupal:webp

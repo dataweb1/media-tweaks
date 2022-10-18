@@ -11,7 +11,9 @@
   ],
   "require": {
     "voku/urlify": "^5.0",
-    "drupal/file_rename": "^1.0@alpha"
+    "drupal/file_rename": "^1.0@alpha",
+    "drupal/webp": "^1.0@beta",
+    "drupal/claro_media_library_theme": "^1.0@alpha"
   },
   "license": "GPL-2.0-or-later",
   "authors": [
