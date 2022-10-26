@@ -3,6 +3,9 @@ close_dialog_or_refresh_page_command:
     js/close_dialog_or_refresh_page_command.js: {}
 
 media_entity_form:
+  css:
+    theme:
+      css/media_entity_form.css: {}
   js:
     js/media_entity_form.js: {}
 

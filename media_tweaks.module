@@ -15,36 +15,37 @@ use Drupal\media_tweaks\Ajax\CloseDialogOrRefreshPageCommand;
 use voku\helper\URLify;
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_field_widget_form_alter().
  */
-function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  // Add 'edit' button to Media widgets.
-  foreach ($form as $key => &$element) {
-    if (substr($key, 0, 6) == 'field_') {
-      if (isset($element['widget']['selection'])) {
-        foreach ($element['widget']['selection'] as $delta => &$item) {
-          if (is_int($delta)) {
-            $url = Url::fromRoute('entity.media.canonical', [
-              'media' => $item['target_id']['#value'],
-              'title' => 'Edit media',
-              'no_redirect' => 1,
-            ]);
-            $link = Link::fromTextAndUrl('Edit', $url)->toRenderable();
-            $link['#attributes'] = [
-              'class' => [
-                'media-library-item__edit',
-                'icon-link',
-              ]
-            ];
-            $item['edit_button'] = $link;
+function media_tweaks_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+  if (isset($element['selection'])) {
+    // Add 'edit' button to Media widgets.
+    foreach ($element['selection'] as $delta => &$item) {
+      if (is_int($delta)) {
+        $url = Url::fromRoute('entity.media.canonical', [
+          'media' => $item['target_id']['#value'],
+          'title' => 'Edit media',
+          'no_redirect' => 1,
+        ]);
+        $link = Link::fromTextAndUrl('Edit', $url)->toRenderable();
+        $link['#attributes'] = [
+          'class' => [
+            'media-library-item__edit',
+            'icon-link',
+          ]
+        ];
+        $item['edit_button'] = $link;
 
-            $item['#attached']['library'][] = 'media_tweaks/media_widget';
-          }
-        }
+        $item['#attached']['library'][] = 'media_tweaks/media_widget';
       }
     }
   }
+}
 
+/**
+ * Implements hook_form_alter().
+ */
+function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $route_name = \Drupal::routeMatch()->getRouteName();
   // For media edit form.
   if (in_array($route_name, ['entity.media.canonical', 'entity.media.edit_form'])) {
@@ -76,10 +77,12 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
 
     $form['actions']['delete']['#weight'] = 12;
 
+    $form['#attached']['library'][] = 'media_tweaks/media_entity_form';
     $form['#attached']['library'][] = 'media_tweaks/close_dialog_or_refresh_page_command';
     $form['#attached']['library'][] = 'core/drupal.ajax';
   }
 }
+
 
 /**
  * Implements hook_link_alter().
@@ -133,6 +136,35 @@ function _media_entity_form_after_build(array $form, FormStateInterface &$formSt
       $form[$element]['widget'][0]['remove_button']['#value'] = t('Replace file');
     }
   }
+
+  $form['field_media_image']['widget'][0]['custom_fields'] = [
+    '#type' => 'details',
+    '#title' => t('Extra information'),
+    '#weight' => 21,
+    '#tree' => FALSE,
+    '#open' => TRUE,
+  ];
+  $form['field_media_image']['widget'][0]['image_crop']['#weight'] = 22;
+
+
+  foreach ($form as $delta => $element) {
+    if (substr($delta, 0,6) == 'field_') {
+      if (!in_array($delta, ['field_media_image', 'field_media_document', 'field_media_video'])) {
+        $form['field_media_image']['widget'][0]['custom_fields'][$delta] = $element;
+        unset($form[$delta]);
+      }
+    }
+  }
+  $form['field_media_image']['widget'][0]['custom_fields']['alt'] =  $form['field_media_image']['widget'][0]['alt'];
+  unset($form['field_media_image']['widget'][0]['alt']);
+
+  $form['field_media_image']['widget'][0]['custom_fields']['title'] = $form['field_media_image']['widget'][0]['title'];
+  unset($form['field_media_image']['widget'][0]['title']);
+
+  unset($form['field_media_image']['widget'][0]['image_crop']['crop_reuse']);
+
+  //dpm($form['field_media_image']['widget'][0]['image_crop']);
+
   return $form;
 }
 
