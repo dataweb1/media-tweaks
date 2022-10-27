@@ -81,6 +81,25 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
     $form['#attached']['library'][] = 'media_tweaks/close_dialog_or_refresh_page_command';
     $form['#attached']['library'][] = 'core/drupal.ajax';
   }
+
+  // Add edit media entity link on CKEditor 'Edit media'.
+  if ($route_name == 'editor.media_dialog') {
+    $media_uuid = $form_state->getUserInput()['editor_object']['attributes']['data-entity-uuid'];
+    $media_loaded_by_uuid = \Drupal::entityTypeManager()->getStorage('media')->loadByProperties(['uuid' => $media_uuid]);
+    if ($media_loaded_by_uuid = reset($media_loaded_by_uuid)) {
+      $url = Url::fromRoute('entity.media.canonical', [
+        'media' => $media_loaded_by_uuid->id(),
+      ]);
+      $edit_media_link = Link::fromTextAndUrl(t('Edit media'), $url)->toRenderable();
+      $edit_media_link['#attributes'] = [
+        'class' => [
+          'button',
+        ]
+      ];
+
+      $form['actions']['edit_media_link'] = $edit_media_link;
+    }
+  }
 }
 
 
