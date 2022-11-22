@@ -13,10 +13,10 @@
   margin-left: 1rem!important;
 }
 
-.form-type-managed-file label {
+.form-type-managed-file label[id^='edit-field-media-image'] {
   display: none!important;
 }
- 
+
 [id^="edit-preview-"],
 .image-preview__img-wrapper {
   position: relative;
