@@ -30,6 +30,10 @@
 }
 
 /* Add media */
+.media-library-add-form-wrapper [id^='edit-preview'] img {
+  width: auto!important;
+}
+
 .media-library-add-form-wrapper details .details-wrapper {
   position: relative;
 }
