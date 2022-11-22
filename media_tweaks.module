@@ -47,35 +47,71 @@ function media_tweaks_field_widget_form_alter(&$element, \Drupal\Core\Form\FormS
  */
 function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $route_name = \Drupal::routeMatch()->getRouteName();
+
   // For media edit form.
-  if (in_array($route_name, ['entity.media.canonical', 'entity.media.edit_form'])) {
+  //if (in_array($route_name, ['entity.media.canonical', 'entity.media.edit_form', 'media_library.ui'])) {
+  if (in_array($form_id, ['media_library_add_form_upload', 'media_image_edit_form'])) {
+
+    if ($form_id == 'media_library_add_form_upload') {
+      if (isset($form['container']['upload'])) {
+      return FALSE;
+      }
+    }
+
     // Unset revision since it is not that usefull form media.
     unset($form['revision_information']);
     unset($form['revision_log_message']);
     unset($form['revision']);
 
-    $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => t('Cancel'),
-      '#weight' => 11,
-      '#ajax' => [
-        'callback' => '_cancelEditMedia'
-      ],
-    ];
 
-    $form['#after_build'][] = '_media_entity_form_after_build';
+    //if (isset($form['actions'])) {
+      $form['actions']['cancel'] = [
+        '#type' => 'submit',
+        '#value' => t('Cancel'),
+        '#weight' => 11,
+        '#ajax' => [
+          'callback' => '_cancelEditMedia'
+        ],
+      ];
 
-    $form['#prefix'] = '<div id="media_edit_form_wrapper">';
-    $form['#suffix'] = '</div>';
+      if ($form_id == 'media_library_add_form_upload') {
+        //dpm($form);
+        $form['items']['#type'] = 'vertical_tabs';
+        $form['items']['#attributes']['class'][] = 'media-library-add-form-wrapper';
+        foreach ($form['media'] as $delta => &$element) {
+          if (is_int($delta)) {
+            //dpm($element);
+            $element['#type'] = 'details';
+            $element['#group'] = 'items';
+            $element['#title'] = $element['fields']['name']['#markup'];
+            //$element['#prefix'] = '<div class="media-item-wrapper">';
+            //$element['#suffix'] = '</div>';
 
-    // AJAXify the media edit form.
-    $form['actions']['submit']['#ajax'] = [
-      'callback' => '_afterEditMedia'
-    ];
+            $element['remove_button']['#weight'] = 0;
+          }
+        }
+        //dpm($form['media']);
+        $form['#after_build'][] = '_media_library_add_form_after_build';
+      }
 
-    $form['actions']['submit']['#weight'] = 10;
 
-    $form['actions']['delete']['#weight'] = 12;
+      if ($form_id == 'media_image_edit_form') {
+        $form['#prefix'] = '<div id="media_edit_form_wrapper">';
+        $form['#suffix'] = '</div>';
+
+        // AJAXify the media edit form.
+        $form['actions']['submit']['#ajax'] = [
+          'callback' => '_afterEditMedia'
+        ];
+        $form['actions']['submit']['#weight'] = 10;
+
+        $form['actions']['delete']['#weight'] = 12;
+
+        $form['#after_build'][] = '_media_image_edit_form_after_build';
+      }
+
+
+    //}
 
     $form['#attached']['library'][] = 'media_tweaks/media_entity_form';
     $form['#attached']['library'][] = 'media_tweaks/close_dialog_or_refresh_page_command';
@@ -143,46 +179,96 @@ function media_tweaks_link_alter(&$variables) {
   $variables['#attached']['library'][] = 'core/drupal.ajax';
 }
 
+function _media_library_add_form_after_build(array $form, FormStateInterface &$formState) {
+
+  //foreach (['field_media_image', 'field_media_document', 'field_media_video'] as $element) {
+
+
+    foreach ($form['media'] as $delta => &$element) {
+      if (is_int($delta)) {
+
+        if (isset($element['fields']['field_media_image'])) {
+          $element['fields']['field_media_image']['widget'][0]['custom_fields'] = [
+            '#type' => 'details',
+            '#title' => t('Extra information'),
+            '#weight' => 21,
+            '#tree' => FALSE,
+            '#open' => TRUE,
+          ];
+          $element['fields']['field_media_image']['widget'][0]['image_crop']['#weight'] = 22;
+
+          foreach ($element['fields'] as $field_delta => $field) {
+            if (substr($field_delta, 0, 6) == 'field_') {
+              if (!in_array($field_delta, ['field_media_image', 'field_media_document', 'field_media_video'])) {
+                //dpm($field);
+                $element['fields']['field_media_image']['widget'][0]['custom_fields'][$field_delta] = $field;
+                unset($element['fields'][$field_delta]);
+              }
+
+            }
+          }
+
+          $element['fields']['field_media_image']['widget'][0]['custom_fields']['alt'] = $element['fields']['field_media_image']['widget'][0]['alt'];
+          unset($element['fields']['field_media_image']['widget'][0]['alt']);
+
+          $element['fields']['field_media_image']['widget'][0]['custom_fields']['title'] = $element['fields']['field_media_image']['widget'][0]['title'];
+          unset($element['fields']['field_media_image']['widget'][0]['title']);
+
+          unset($element['fields']['field_media_image']['widget'][0]['image_crop']['crop_reuse']);
+
+        }
+
+      }
+    }
+  //}
+//dpm($form);
+
+  return $form;
+}
+
 /**
  * @param array $form
  * @param \Drupal\Core\Form\FormStateInterface $formState
  *
  * @return array
  */
-function _media_entity_form_after_build(array $form, FormStateInterface &$formState) {
+function _media_image_edit_form_after_build(array $form, FormStateInterface &$formState) {
+
   foreach (['field_media_image', 'field_media_document', 'field_media_video'] as $element) {
     if (isset($form[$element])) {
       $form[$element]['widget'][0]['remove_button']['#value'] = t('Replace file');
     }
   }
 
-  $form['field_media_image']['widget'][0]['custom_fields'] = [
-    '#type' => 'details',
-    '#title' => t('Extra information'),
-    '#weight' => 21,
-    '#tree' => FALSE,
-    '#open' => TRUE,
-  ];
-  $form['field_media_image']['widget'][0]['image_crop']['#weight'] = 22;
+  if (isset($form['field_media_image'])) {
+    $form['field_media_image']['widget'][0]['custom_fields'] = [
+      '#type' => 'details',
+      '#title' => t('Extra information'),
+      '#weight' => 21,
+      '#tree' => FALSE,
+      '#open' => TRUE,
+    ];
+    $form['field_media_image']['widget'][0]['image_crop']['#weight'] = 22;
 
 
-  foreach ($form as $delta => $element) {
-    if (substr($delta, 0,6) == 'field_') {
-      if (!in_array($delta, ['field_media_image', 'field_media_document', 'field_media_video'])) {
-        $form['field_media_image']['widget'][0]['custom_fields'][$delta] = $element;
-        unset($form[$delta]);
+    foreach ($form as $delta => $element) {
+      if (substr($delta, 0, 6) == 'field_') {
+        if (!in_array($delta, ['field_media_image', 'field_media_document', 'field_media_video'])) {
+          $form['field_media_image']['widget'][0]['custom_fields'][$delta] = $element;
+          unset($form[$delta]);
+        }
       }
     }
+    $form['field_media_image']['widget'][0]['custom_fields']['alt'] = $form['field_media_image']['widget'][0]['alt'];
+    unset($form['field_media_image']['widget'][0]['alt']);
+
+    $form['field_media_image']['widget'][0]['custom_fields']['title'] = $form['field_media_image']['widget'][0]['title'];
+    unset($form['field_media_image']['widget'][0]['title']);
+
+    unset($form['field_media_image']['widget'][0]['image_crop']['crop_reuse']);
+
+    //dpm($form['field_media_image']['widget'][0]['image_crop']);
   }
-  $form['field_media_image']['widget'][0]['custom_fields']['alt'] =  $form['field_media_image']['widget'][0]['alt'];
-  unset($form['field_media_image']['widget'][0]['alt']);
-
-  $form['field_media_image']['widget'][0]['custom_fields']['title'] = $form['field_media_image']['widget'][0]['title'];
-  unset($form['field_media_image']['widget'][0]['title']);
-
-  unset($form['field_media_image']['widget'][0]['image_crop']['crop_reuse']);
-
-  //dpm($form['field_media_image']['widget'][0]['image_crop']);
 
   return $form;
 }
@@ -191,6 +277,7 @@ function _media_entity_form_after_build(array $form, FormStateInterface &$formSt
  * AJAX callback after File Rename.
  */
 function _afterEditMedia(array $form, FormStateInterface &$formState): AjaxResponse {
+  dpm('_afterEditMedia');
   $response = new AjaxResponse();
   $messages = \Drupal::messenger()->all();
   if (!isset($messages['error'])) {
@@ -239,6 +326,9 @@ function _afterEditMedia(array $form, FormStateInterface &$formState): AjaxRespo
  */
 function _cancelEditMedia(array $form, FormStateInterface &$formState): AjaxResponse {
   $response = new AjaxResponse();
+  // For media edit form coming via media_canonical.
+  $response->addCommand(new CloseDialogCommand('.media-library-widget-modal .ui-dialog-content'));
+
   // For media edit form coming via media_canonical.
   $response->addCommand(new CloseDialogCommand('.entitymediacanonical-dialog .ui-dialog-content'));
 

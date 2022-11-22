@@ -28,3 +28,17 @@
 .crop-preview-wrapper__crop-reset {
   margin: 1rem 0!important;
 }
+
+/* Add media */
+.media-library-add-form-wrapper details .details-wrapper {
+  position: relative;
+}
+
+.media-library-add-form-wrapper details {
+  margin-top: 1.5rem;
+}
+
+input[id^=edit-remove-button] {
+  position: absolute;
+  right: 1.5rem;
+}
