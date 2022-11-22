@@ -12,3 +12,8 @@ media_entity_form:
 media_widget:
   js:
     js/media_widget.js: {}
+
+media_library:
+  css:
+    theme:
+      css/media_library.css: {}

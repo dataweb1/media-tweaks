@@ -1,0 +1,14 @@
+.media-library-wrapper {
+  margin-left: -1rem!important;
+  margin-right: -1rem!important;
+}
+
+.media-library-menu {
+  padding-left: 0;
+}
+
+#media-library-content {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-right: -.5rem;
+}
