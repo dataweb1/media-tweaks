@@ -48,13 +48,17 @@ function media_tweaks_field_widget_form_alter(&$element, \Drupal\Core\Form\FormS
 function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $route_name = \Drupal::routeMatch()->getRouteName();
 
-  // For media edit form.
-  //if (in_array($route_name, ['entity.media.canonical', 'entity.media.edit_form', 'media_library.ui'])) {
+  // For media library.
+  if (in_array($route_name, ['media_library.ui'])) {
+    $form['#attached']['library'][] = 'media_tweaks/media_library';
+  }
+
+  // For media edit/add form.
   if (in_array($form_id, ['media_library_add_form_upload', 'media_image_edit_form'])) {
 
     if ($form_id == 'media_library_add_form_upload') {
       if (isset($form['container']['upload'])) {
-      return FALSE;
+        return FALSE;
       }
     }
 
@@ -65,50 +69,50 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
 
 
     //if (isset($form['actions'])) {
-      $form['actions']['cancel'] = [
-        '#type' => 'submit',
-        '#value' => t('Cancel'),
-        '#weight' => 11,
-        '#ajax' => [
-          'callback' => '_cancelEditMedia'
-        ],
-      ];
+    $form['actions']['cancel'] = [
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#weight' => 11,
+      '#ajax' => [
+        'callback' => '_cancelEditMedia'
+      ],
+    ];
 
-      if ($form_id == 'media_library_add_form_upload') {
-        //dpm($form);
-        $form['items']['#type'] = 'vertical_tabs';
-        $form['items']['#attributes']['class'][] = 'media-library-add-form-wrapper';
-        foreach ($form['media'] as $delta => &$element) {
-          if (is_int($delta)) {
-            //dpm($element);
-            $element['#type'] = 'details';
-            $element['#group'] = 'items';
-            $element['#title'] = $element['fields']['name']['#markup'];
-            //$element['#prefix'] = '<div class="media-item-wrapper">';
-            //$element['#suffix'] = '</div>';
+    if ($form_id == 'media_library_add_form_upload') {
+      //dpm($form);
+      $form['items']['#type'] = 'vertical_tabs';
+      $form['items']['#attributes']['class'][] = 'media-library-add-form-wrapper';
+      foreach ($form['media'] as $delta => &$element) {
+        if (is_int($delta)) {
+          //dpm($element);
+          $element['#type'] = 'details';
+          $element['#group'] = 'items';
+          $element['#title'] = $element['fields']['name']['#markup'];
+          //$element['#prefix'] = '<div class="media-item-wrapper">';
+          //$element['#suffix'] = '</div>';
 
-            $element['remove_button']['#weight'] = 0;
-          }
+          $element['remove_button']['#weight'] = 0;
         }
-        //dpm($form['media']);
-        $form['#after_build'][] = '_media_library_add_form_after_build';
       }
+      //dpm($form['media']);
+      $form['#after_build'][] = '_media_library_add_form_after_build';
+    }
 
 
-      if ($form_id == 'media_image_edit_form') {
-        $form['#prefix'] = '<div id="media_edit_form_wrapper">';
-        $form['#suffix'] = '</div>';
+    if ($form_id == 'media_image_edit_form') {
+      $form['#prefix'] = '<div id="media_edit_form_wrapper">';
+      $form['#suffix'] = '</div>';
 
-        // AJAXify the media edit form.
-        $form['actions']['submit']['#ajax'] = [
-          'callback' => '_afterEditMedia'
-        ];
-        $form['actions']['submit']['#weight'] = 10;
+      // AJAXify the media edit form.
+      $form['actions']['submit']['#ajax'] = [
+        'callback' => '_afterEditMedia'
+      ];
+      $form['actions']['submit']['#weight'] = 10;
 
-        $form['actions']['delete']['#weight'] = 12;
+      $form['actions']['delete']['#weight'] = 12;
 
-        $form['#after_build'][] = '_media_image_edit_form_after_build';
-      }
+      $form['#after_build'][] = '_media_image_edit_form_after_build';
+    }
 
 
     //}
@@ -137,7 +141,6 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
     }
   }
 }
-
 
 /**
  * Implements hook_link_alter().
