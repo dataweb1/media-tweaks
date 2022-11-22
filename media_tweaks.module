@@ -84,17 +84,14 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
       $form['items']['#attributes']['class'][] = 'media-library-add-form-wrapper';
       foreach ($form['media'] as $delta => &$element) {
         if (is_int($delta)) {
-          //dpm($element);
           $element['#type'] = 'details';
           $element['#group'] = 'items';
           $element['#title'] = $element['fields']['name']['#markup'];
-          //$element['#prefix'] = '<div class="media-item-wrapper">';
-          //$element['#suffix'] = '</div>';
-
           $element['remove_button']['#weight'] = 0;
+          $element['preview']['name'] = $element['fields']['name'];
+          unset($element['fields']['name']);
         }
       }
-      //dpm($form['media']);
       $form['#after_build'][] = '_media_library_add_form_after_build';
     }
 

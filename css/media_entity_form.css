@@ -13,16 +13,25 @@
   margin-left: 1rem!important;
 }
 
+.form-type-managed-file label {
+  display: none!important;
+}
+ 
+[id^="edit-preview-"],
 .image-preview__img-wrapper {
   position: relative;
 }
 
+[id^="edit-preview-"] .form-item-name.form-item,
+[id^="edit-preview-"] .form-item-name,
 .image-preview__img-wrapper .file {
   position: absolute;
   left: 0;
   bottom: 0;
   padding: .5rem;
   background-color: rgba(255,255,255,.7);
+  background-image: none;
+  margin: 0!important;
 }
 
 .crop-preview-wrapper__crop-reset {
@@ -45,4 +54,10 @@
 input[id^=edit-remove-button] {
   position: absolute;
   right: 1.5rem;
+  z-index: 1;
 }
+
+.media-library-add-form-wrapper .form-item-name label {
+  display: none!important;
+}
+
