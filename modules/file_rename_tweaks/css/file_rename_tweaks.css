@@ -17,3 +17,10 @@
 .form-item-new-filename .form-text {
   display: inline-block;
 }
+
+.button-file-rename {
+  line-height: .75rem!important;
+  margin-left: 0.7rem!important;
+  padding-left: .7rem!important;
+  padding-right: .7rem!important;
+}
