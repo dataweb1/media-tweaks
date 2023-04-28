@@ -79,7 +79,6 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
     ];
 
     if ($form_id == 'media_library_add_form_upload') {
-      //dpm($form);
       $form['items']['#type'] = 'vertical_tabs';
       $form['items']['#attributes']['class'][] = 'media-library-add-form-wrapper';
       foreach ($form['media'] as $delta => &$element) {
@@ -200,7 +199,6 @@ function _media_library_add_form_after_build(array $form, FormStateInterface &$f
           foreach ($element['fields'] as $field_delta => $field) {
             if (substr($field_delta, 0, 6) == 'field_') {
               if (!in_array($field_delta, ['field_media_image', 'field_media_document', 'field_media_video'])) {
-                //dpm($field);
                 $element['fields']['field_media_image']['widget'][0]['custom_fields'][$field_delta] = $field;
                 unset($element['fields'][$field_delta]);
               }
@@ -221,7 +219,6 @@ function _media_library_add_form_after_build(array $form, FormStateInterface &$f
       }
     }
   //}
-//dpm($form);
 
   return $form;
 }
@@ -266,8 +263,6 @@ function _media_image_edit_form_after_build(array $form, FormStateInterface &$fo
     unset($form['field_media_image']['widget'][0]['title']);
 
     unset($form['field_media_image']['widget'][0]['image_crop']['crop_reuse']);
-
-    //dpm($form['field_media_image']['widget'][0]['image_crop']);
   }
 
   return $form;
@@ -277,7 +272,6 @@ function _media_image_edit_form_after_build(array $form, FormStateInterface &$fo
  * AJAX callback after File Rename.
  */
 function _afterEditMedia(array $form, FormStateInterface &$formState): AjaxResponse {
-  dpm('_afterEditMedia');
   $response = new AjaxResponse();
   $messages = \Drupal::messenger()->all();
   if (!isset($messages['error'])) {
