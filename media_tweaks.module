@@ -15,9 +15,9 @@ use Drupal\media_tweaks\Ajax\CloseDialogOrRefreshPageCommand;
 use voku\helper\URLify;
 
 /**
- * Implements hook_field_widget_form_alter().
+ * Implements hook_field_widget_single_element_form_alter().
  */
-function media_tweaks_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+function media_tweaks_field_widget_single_element_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
   if (isset($element['selection'])) {
     // Add 'edit' button to Media widgets.
     foreach ($element['selection'] as $delta => &$item) {

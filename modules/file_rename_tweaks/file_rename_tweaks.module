@@ -14,9 +14,9 @@ function file_rename_tweaks_entity_type_build(array &$entity_types) {
 }
 
 /**
- * Implements hook_field_widget_form_alter().
+ * Implements hook_field_widget_single_element_form_alter().
  */
-function file_rename_tweaks_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+function file_rename_tweaks_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
   $widget = $context['widget'];
   if ($widget instanceof FileWidget && isset($element['#default_value']['target_id'])) {
     // Remove 'button--danger' class.
