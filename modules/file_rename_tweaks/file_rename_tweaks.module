@@ -20,7 +20,7 @@ function file_rename_tweaks_field_widget_single_element_form_alter(&$element, Fo
   $widget = $context['widget'];
   if ($widget instanceof FileWidget && isset($element['#default_value']['target_id'])) {
     // Remove 'button--danger' class.
-    if (is_array($element['rename_button']['#attributes']['class'])) {
+    if (isset($element['rename_button']) && isset($element['rename_button']['#attributes']['class']) && is_array($element['rename_button']['#attributes']['class'])) {
       if (($key = array_search('button--danger', $element['rename_button']['#attributes']['class'])) !== false) {
         unset($element['rename_button']['#attributes']['class'][$key]);
       }
