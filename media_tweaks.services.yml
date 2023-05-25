@@ -1,0 +1,3 @@
+services:
+  media_tweaks:
+    class: Drupal\media_tweaks\Service\MediaTweaks

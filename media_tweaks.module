@@ -12,31 +12,23 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\file\Plugin\Field\FieldWidget\FileWidget;
 use Drupal\media_tweaks\Ajax\CloseDialogOrRefreshPageCommand;
+use Drupal\media_tweaks\Service\MediaTweaks;
 use voku\helper\URLify;
 
 /**
  * Implements hook_field_widget_single_element_form_alter().
  */
 function media_tweaks_field_widget_single_element_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+  /** @var MediaTweaks $media_tweaks */
+  $media_tweaks = \Drupal::service('media_tweaks');
+
   if (isset($element['selection'])) {
     // Add 'edit' button to Media widgets.
     foreach ($element['selection'] as $delta => &$item) {
       if (is_int($delta)) {
-        $url = Url::fromRoute('entity.media.canonical', [
-          'media' => $item['target_id']['#value'],
-          'title' => 'Edit media',
-          'no_redirect' => 1,
-        ]);
-        $link = Link::fromTextAndUrl('Edit', $url)->toRenderable();
-        $link['#attributes'] = [
-          'class' => [
-            'media-library-item__edit',
-            'icon-link',
-          ]
-        ];
-        $item['edit_button'] = $link;
-
-        $item['#attached']['library'][] = 'media_tweaks/media_widget';
+        if (!array_key_exists('edit_button', $item)) {
+          $item['edit_button'] = $media_tweaks->getMediaFormLink($item['target_id']['#value']);
+        }
       }
     }
   }
@@ -54,7 +46,14 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
   }
 
   // For media edit/add form.
-  if (in_array($form_id, ['media_library_add_form_upload', 'media_image_edit_form'])) {
+  if (in_array($form_id, ['media_library_add_form_upload']) ||
+      in_array($route_name, [
+      'entity.media.canonical',
+      'entity.media.edit_form',
+      'entity.media.delete_form',
+      'entity.media.edit_custom_form',
+      'entity.file.rename_form',
+    ])) {
 
     if ($form_id == 'media_library_add_form_upload') {
       if (isset($form['container']['upload'])) {
@@ -94,8 +93,11 @@ function media_tweaks_form_alter(&$form, FormStateInterface $form_state, $form_i
       $form['#after_build'][] = '_media_library_add_form_after_build';
     }
 
-
-    if ($form_id == 'media_image_edit_form') {
+    if (in_array($route_name, [
+      'entity.media.canonical',
+      'entity.media.edit_form',
+      'entity.media.edit_custom_form',
+    ])) {
       $form['#prefix'] = '<div id="media_edit_form_wrapper">';
       $form['#suffix'] = '</div>';
 
@@ -154,6 +156,7 @@ function media_tweaks_link_alter(&$variables) {
     'entity.media.canonical',
     'entity.media.edit_form',
     'entity.media.delete_form',
+    'entity.media.edit_custom_form',
     'entity.file.rename_form',
   ])) {
     return;
@@ -280,6 +283,10 @@ function _afterEditMedia(array $form, FormStateInterface &$formState): AjaxRespo
 
     // For media edit form coming via media_edit.form.
     $response->addCommand(new CloseDialogOrRefreshPageCommand('.entitymediaedit-form-dialog .ui-dialog-content'));
+
+    // For media edit form coming via media_edit_custom.form.
+    $response->addCommand(new CloseDialogOrRefreshPageCommand('.entitymediaedit-custom-form-dialog .ui-dialog-content'));
+
     $response->addCommand(new MessageCommand($messages['status'][0], NULL, ['type' => 'status']));
     \Drupal::messenger()->deleteAll();
   }
